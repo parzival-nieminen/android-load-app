@@ -8,11 +8,13 @@ import android.view.View
 import kotlin.properties.Delegates
 
 class LoadingButton @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+    private var colorCircle = 0
     private var widthSize = 0
     private var heightSize = 0
     private var downloadProgress = 0f
+    private var colorBar = 0
 
     private val valueAnimator = ValueAnimator()
 
@@ -20,6 +22,11 @@ class LoadingButton @JvmOverloads constructor(
     }
 
     init {
+        context.theme.obtainStyledAttributes(attrs, R.styleable.LoadingButton, 0, 0).apply {
+            downloadProgress = getFloat(R.styleable.LoadingButton_progress, 0.0f)
+            colorBar = getColor(R.styleable.LoadingButton_colorBar, 0)
+            colorCircle = getColor(R.styleable.LoadingButton_colorCircle, 0)
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -33,7 +40,7 @@ class LoadingButton @JvmOverloads constructor(
 
     private val paintProgress = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.RED
+        color =  colorBar
     }
 
     private val paintCircleBackground = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -43,7 +50,7 @@ class LoadingButton @JvmOverloads constructor(
 
     private val paintProgressCircle = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.BLUE
+        color = colorCircle
     }
 
     private var buttonText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -51,7 +58,6 @@ class LoadingButton @JvmOverloads constructor(
         typeface = Typeface.DEFAULT_BOLD
         textSize = 48f
     }
-
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
@@ -61,7 +67,6 @@ class LoadingButton @JvmOverloads constructor(
             drawPaint(paintButtonBackground)
         }
         // progress background
-        downloadProgress = 75f
         val progressWidth = widthSize * (downloadProgress / 100)
         canvas?.apply {
             drawRect(0f, 0f, progressWidth, heightSize.toFloat(), paintProgress)
@@ -70,7 +75,12 @@ class LoadingButton @JvmOverloads constructor(
         val padding = heightSize.toFloat() * 0.1f
         val radius = (heightSize.toFloat() / 2.0f) - padding
         canvas?.apply {
-            drawCircle(widthSize.toFloat() - (radius + padding), heightSize.toFloat() / 2.0f, radius, paintCircleBackground)
+            drawCircle(
+                widthSize.toFloat() - (radius + padding),
+                heightSize.toFloat() / 2.0f,
+                radius,
+                paintCircleBackground
+            )
         }
 
         // progress circle
@@ -89,7 +99,12 @@ class LoadingButton @JvmOverloads constructor(
         val text = "Download"
         buttonText.getTextBounds(text, 0, text.length, textBox)
         canvas?.apply {
-            drawText(text, widthSize.toFloat() / 2.0f - textBox.centerX(), heightSize.toFloat() / 2.0f - textBox.centerY(), buttonText)
+            drawText(
+                text,
+                widthSize.toFloat() / 2.0f - textBox.centerX(),
+                heightSize.toFloat() / 2.0f - textBox.centerY(),
+                buttonText
+            )
         }
     }
 
@@ -97,9 +112,9 @@ class LoadingButton @JvmOverloads constructor(
         val minw: Int = paddingLeft + paddingRight + suggestedMinimumWidth
         val w: Int = resolveSizeAndState(minw, widthMeasureSpec, 1)
         val h: Int = resolveSizeAndState(
-                MeasureSpec.getSize(w),
-                heightMeasureSpec,
-                0
+            MeasureSpec.getSize(w),
+            heightMeasureSpec,
+            0
         )
         widthSize = w
         heightSize = h
