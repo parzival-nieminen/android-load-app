@@ -1,5 +1,7 @@
 package com.udacity
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
@@ -10,23 +12,71 @@ import kotlin.properties.Delegates
 class LoadingButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
-    private var colorCircle = 0
     private var widthSize = 0
     private var heightSize = 0
-    private var downloadProgress = 0f
+    private var valueAnimator = ValueAnimator()
+
     private var colorBar = 0
-
-    private val valueAnimator = ValueAnimator()
-
-    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
-    }
+    private var colorCircle = 0
+    private var progress = 0f
 
     init {
         context.theme.obtainStyledAttributes(attrs, R.styleable.LoadingButton, 0, 0).apply {
-            downloadProgress = getFloat(R.styleable.LoadingButton_progress, 0.0f)
             colorBar = getColor(R.styleable.LoadingButton_colorBar, 0)
             colorCircle = getColor(R.styleable.LoadingButton_colorCircle, 0)
         }
+    }
+
+    private var buttonState: ButtonState by Delegates.observable(ButtonState.Completed) { p, old, new ->
+        when (new) {
+            ButtonState.Clicked -> {
+                if (valueAnimator.isRunning) {
+                    valueAnimator.cancel()
+                }
+                valueAnimator = ValueAnimator.ofFloat(0f, widthSize.toFloat()).apply {
+                    setAnimatorListeners()
+                    repeatCount = 1
+                    repeatMode = ValueAnimator.REVERSE
+                    duration = 700
+                    start()
+                }
+                invalidate()
+            }
+            ButtonState.Completed -> {
+                valueAnimator.cancel()
+                progress = 0f
+                invalidate()
+            }
+            ButtonState.Loading -> {
+                if (valueAnimator.isRunning) {
+                    valueAnimator.cancel()
+                }
+                valueAnimator = ValueAnimator.ofFloat(0f, widthSize.toFloat()).apply {
+                    setAnimatorListeners()
+                    repeatCount = ValueAnimator.INFINITE
+                    repeatMode = ValueAnimator.REVERSE
+                    duration = 700
+                    start()
+                }
+                invalidate()
+            }
+        }
+    }
+
+    private fun ValueAnimator.setAnimatorListeners() {
+        addUpdateListener {
+            progress = it.animatedValue as Float
+            invalidate()
+        }
+        addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator?) {
+                isEnabled = false
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                isEnabled = true
+            }
+        })
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -40,7 +90,7 @@ class LoadingButton @JvmOverloads constructor(
 
     private val paintProgress = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color =  colorBar
+        color = colorBar
     }
 
     private val paintCircleBackground = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -67,17 +117,20 @@ class LoadingButton @JvmOverloads constructor(
             drawPaint(paintButtonBackground)
         }
         // progress background
-        val progressWidth = widthSize * (downloadProgress / 100)
+        val progressWidth = widthSize * (progress / 100)
         canvas?.apply {
             drawRect(0f, 0f, progressWidth, heightSize.toFloat(), paintProgress)
         }
         // default circle background
+        val centerY = heightSize.toFloat() / 2.0f
+        val centerX = widthSize.toFloat() / 2.0f
         val padding = heightSize.toFloat() * 0.1f
-        val radius = (heightSize.toFloat() / 2.0f) - padding
+        val radius = centerY - padding
+
         canvas?.apply {
             drawCircle(
                 widthSize.toFloat() - (radius + padding),
-                heightSize.toFloat() / 2.0f,
+                centerY,
                 radius,
                 paintCircleBackground
             )
@@ -92,7 +145,7 @@ class LoadingButton @JvmOverloads constructor(
             right = 2.0f * radius + padding + widthOffset
         }
         canvas?.apply {
-            drawArc(circle, 0f, (downloadProgress / 100) * 360f, true, paintProgressCircle)
+            drawArc(circle, 0f, (progress / 100) * 360f, true, paintProgressCircle)
         }
         // paint text
         var textBox = Rect()
@@ -101,8 +154,8 @@ class LoadingButton @JvmOverloads constructor(
         canvas?.apply {
             drawText(
                 text,
-                widthSize.toFloat() / 2.0f - textBox.centerX(),
-                heightSize.toFloat() / 2.0f - textBox.centerY(),
+                centerX - textBox.centerX(),
+                centerY - textBox.centerY(),
                 buttonText
             )
         }
@@ -119,6 +172,10 @@ class LoadingButton @JvmOverloads constructor(
         widthSize = w
         heightSize = h
         setMeasuredDimension(w, h)
+    }
+
+    fun setState(newState: ButtonState) {
+        buttonState = newState
     }
 
 }
