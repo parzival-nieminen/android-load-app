@@ -1,43 +1,42 @@
 package com.udacity
 
 import android.app.DownloadManager
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.MutableLiveData
+import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
 
 
-class MainActivity : AppCompatActivity(), CoroutineScope {
-
-    //private lateinit var activityMainBinding: Actima
+class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
     private lateinit var action: NotificationCompat.Action
-    private val _progress = MutableLiveData<Float>()
-    private val RESET_PROGRESS: Float = 0.0f
+
+    private lateinit var repoUrl: String
+    private lateinit var repoName: String
 
     init {
-        _progress.value = 0f
     }
-
-    val progress: MutableLiveData<Float>
-        get() = _progress
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +46,33 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
         custom_button.setOnClickListener {
-            launch {
-                download()
+            if (isNetworkOn(this)) downloadContent() else {
+                custom_button.setState(ButtonState.Clicked)
+            }
+        }
+    }
+
+    fun onRadioButtonClicked(view: View) {
+        if (view is RadioButton) {
+            val checked = view.isChecked
+            when (view.getId()) {
+                R.id.radio_glide ->
+                    if (checked) {
+                        repoUrl = GLIDE
+                        repoName = "Glide"
+                    }
+                R.id.radio_loadApp ->
+                    if (checked) {
+                        repoUrl = UDACITY
+                        repoName = "Udacity"
+                    }
+                R.id.radio_retrofit ->
+                    if (checked) {
+                        repoUrl = RETROFIT
+                        repoName = "Retrofit"
+                    }
+                else ->
+                    Toast.makeText(this@MainActivity, "ABC", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -57,87 +81,93 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             if (downloadID == id) {
-                _progress.value = RESET_PROGRESS
-                Toast.makeText(this@MainActivity, "Download Completed", Toast.LENGTH_SHORT).show()
-                println("is completed")
+                custom_button.setState(ButtonState.Completed)
+
+                notificationManager = ContextCompat.getSystemService(
+                    context!!,
+                    NotificationManager::class.java
+                ) as NotificationManager
+
+                createChannel(
+                    getString(R.string.notification_channel_id),
+                    getString(R.string.channel_name)
+                )
+
+                notificationManager.sendNotification("Dowmloadd is read", context)
+
             }
         }
     }
 
-    private suspend fun download() {
-        withContext(Dispatchers.IO) {
-            val request =
-                    DownloadManager.Request(Uri.parse(URL))
-                            .setTitle(getString(R.string.app_name))
-                            .setDescription(getString(R.string.app_description))
-                            .setRequiresCharging(false)
-                            .setAllowedOverMetered(true)
-                            .setAllowedOverRoaming(true)
-            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-            downloadID = downloadManager.enqueue(request)// enqueue puts the download request in the queue.
+    private fun downloadContent() = when {
+        repoName != null -> {
+            custom_button.setState(ButtonState.Loading)
+            download()
+        }
+        else -> {
+            custom_button.setState(ButtonState.Clicked)
+            Toast.makeText(this, "Nothing to do, choose a download", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
 
-            var finishDownload = false
-            while (!finishDownload) {
-                val cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadID))
-                if (cursor.moveToFirst()) {
-                    val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                    when (status) {
-                        DownloadManager.STATUS_FAILED -> {
-                            finishDownload = true
-                            _progress.postValue(RESET_PROGRESS)
-                            println("is failed")
-                        }
-                        DownloadManager.STATUS_RUNNING -> {
-                            val total = cursor.getFloat(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                            if (total >= 0) {
-                                val downloaded = cursor.getFloat(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                                _progress.postValue((downloaded * 100f) / total)
-                                println("is Running, current: progress is: " + _progress.value + " total: " + total)
-                            }
-                        }
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            finishDownload = true
-                            _progress.postValue(100f)
-                            println("is successful")
-                        }
-                    }
+    private fun download() {
+        val request =
+            DownloadManager.Request(Uri.parse(repoUrl))
+                .setTitle(repoName)
+                .setDescription(getString(R.string.app_description))
+                .setRequiresCharging(false)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+        val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        downloadID = downloadManager.enqueue(request)
+    }
+
+    private fun createChannel(channelId: String, channelName: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
+                channelId,
+                channelName,
+                // TODO: Step 2.4 change importance
+                NotificationManager.IMPORTANCE_HIGH
+            )// TODO: Step 2.6 disable badges for this channel
+                .apply {
+                    setShowBadge(false)
                 }
-            }
+
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.RED
+            notificationChannel.enableVibration(true)
+            notificationChannel.description = getString(R.string.notification_description)
+
+            notificationManager.createNotificationChannel(notificationChannel)
+
+        }
+    }
+
+    private fun isNetworkOn(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+            else -> false
         }
     }
 
     companion object {
         private const val URL =
+            "https://ftp.nluug.nl/pub/graphics/blender/release/Blender2.92/blender-2.92.0-macOS.dmg"
+        private const val UDACITY =
             "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
-                //"https://ftp.nluug.nl/pub/graphics/blender/release/Blender2.92/blender-2.92.0-macOS.dmg"
+        private const val GLIDE =
+            "https://github.com/bumptech/glide/archive/master.zip"
+        private const val RETROFIT =
+            "https://github.com/square/retrofit/archive/master.zip"
         private const val CHANNEL_ID = "channelId"
     }
-
-    fun onRadioButtonClicked(view: View) {
-        if (view is RadioButton) {
-            // Is the button now checked?
-            val checked = view.isChecked
-
-            // Check which radio button was clicked
-            when (view.getId()) {
-                R.id.radio_glide ->
-                    if (checked) {
-                        // Pirates are the best
-                    }
-                R.id.radio_loadApp ->
-                    if (checked) {
-                        // Ninjas rule
-                    }
-                R.id.radio_retrofit ->
-                    if (checked) {
-                        // Ninjas rule
-                    }
-                else ->
-                    Toast.makeText(this@MainActivity, "ABC", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Default
 }

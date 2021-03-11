@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="LoadingButton">
-        <attr name="progress" format="float" />
         <attr name="colorBar" format="color" />
         <attr name="colorCircle" format="color" />
     </declare-styleable>
