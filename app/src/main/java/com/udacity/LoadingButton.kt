@@ -7,6 +7,8 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.animation.addListener
+import timber.log.Timber
 import kotlin.properties.Delegates
 
 class LoadingButton @JvmOverloads constructor(
@@ -28,6 +30,7 @@ class LoadingButton @JvmOverloads constructor(
     }
 
     private var buttonState: ButtonState by Delegates.observable(ButtonState.Completed) { p, old, new ->
+
         when (new) {
             ButtonState.Clicked -> {
                 if (valueAnimator.isRunning) {
@@ -72,9 +75,9 @@ class LoadingButton @JvmOverloads constructor(
             override fun onAnimationStart(animation: Animator?) {
                 isEnabled = false
             }
-
             override fun onAnimationEnd(animation: Animator?) {
                 isEnabled = true
+                progress = 0f
             }
         })
     }
