@@ -127,15 +127,6 @@ class LoadingButton @JvmOverloads constructor(
         val padding = heightSize.toFloat() * 0.1f
         val radius = centerY - padding
 
-        canvas?.apply {
-            drawCircle(
-                widthSize.toFloat() - (radius + padding),
-                centerY,
-                radius,
-                paintCircleBackground
-            )
-        }
-
         // progress circle
         val widthOffset = widthSize.toFloat() - 2 * radius - 2 * padding
         val circle = RectF().apply {
