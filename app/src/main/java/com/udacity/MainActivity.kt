@@ -3,7 +3,6 @@ package com.udacity
 import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,7 +17,6 @@ import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -29,14 +27,9 @@ class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
     private lateinit var notificationManager: NotificationManager
-    private lateinit var pendingIntent: PendingIntent
-    private lateinit var action: NotificationCompat.Action
 
-    private lateinit var repoUrl: String
-    private lateinit var repoName: String
-
-    init {
-    }
+    private var repoUrl: String? = null
+    private var repoName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +85,7 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.notification_channel_id),
                     getString(R.string.channel_name)
                 )
-
+                notificationManager.cancelNotifications()
                 notificationManager.sendNotification("Dowmloadd is read", context)
 
             }
@@ -128,12 +121,10 @@ class MainActivity : AppCompatActivity() {
             val notificationChannel = NotificationChannel(
                 channelId,
                 channelName,
-                // TODO: Step 2.4 change importance
                 NotificationManager.IMPORTANCE_HIGH
-            )// TODO: Step 2.6 disable badges for this channel
-                .apply {
-                    setShowBadge(false)
-                }
+            ).apply {
+                setShowBadge(false)
+            }
 
             notificationChannel.enableLights(true)
             notificationChannel.lightColor = Color.RED
@@ -141,7 +132,6 @@ class MainActivity : AppCompatActivity() {
             notificationChannel.description = getString(R.string.notification_description)
 
             notificationManager.createNotificationChannel(notificationChannel)
-
         }
     }
 
