@@ -20,4 +20,9 @@
     <string name="file_name">File Name:</string>
     <string name="download">Download</string>
     <string name="channel_name">Load App</string>
+
+    <string name="load_button_state_loading">we are loading...</string>
+    <string name="load_button_text">Download</string>
+    <string name="load_button_toast_no_download">Please select one option</string>
+
 </resources>

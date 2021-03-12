@@ -3,5 +3,6 @@
     <declare-styleable name="LoadingButton">
         <attr name="colorBar" format="color" />
         <attr name="colorCircle" format="color" />
+        <attr name="colorBackground" format="color" />
     </declare-styleable>
 </resources>
