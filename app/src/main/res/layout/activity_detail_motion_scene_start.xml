@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="6dp"
-    android:contentDescription="@string/detail_description_image_suomi"
-    app:layoutDescription="@xml/activity_detail_scene"
-    tools:context=".DetailActivity">
+    tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/header_image"
@@ -26,47 +23,42 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent">
 
         <TextView
-            android:id="@+id/detail_file_name_label"
+            android:id="@+id/detail_file_name_label1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/roboto_medium"
-            android:padding="16dp"
             android:text="@string/detail_file_name_label" />
 
         <TextView
-            android:id="@+id/detail_file_name_text"
+            android:id="@+id/detail_file_name_text1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/roboto"
-            android:padding="16dp" />
+            android:fontFamily="@font/roboto" />
 
         <TextView
-            android:id="@+id/detail_state_label"
+            android:id="@+id/detail_state_label1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/roboto_medium"
-            android:padding="16dp"
             android:text="@string/detail_state_label" />
 
         <TextView
-            android:id="@+id/detail_state_text"
+            android:id="@+id/detail_state_text1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/roboto"
-            android:padding="16dp" />
+            android:fontFamily="@font/roboto" />
 
         <Button
-            android:id="@+id/detail_close_button"
-            style="@style/Widget.AppCompat.Button.Colored"
+            android:id="@+id/detail_close_button1"
+            style="@style/Widget.AppCompat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/roboto"
-            android:padding="16dp"
             android:text="@string/detail_close_button" />
 
     </LinearLayout>
@@ -91,4 +83,4 @@
             android:textColor="@android:color/background_dark"
             android:textSize="22sp" />
     </LinearLayout>
-</androidx.constraintlayout.motion.widget.MotionLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

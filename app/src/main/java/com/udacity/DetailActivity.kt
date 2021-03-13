@@ -11,10 +11,18 @@ class DetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
-        setSupportActionBar(toolbar)
         cancelNotification()
 
         val extras = intent.extras
+
+        extras?.let {
+            detail_file_name_text.text = it.getString(EXTRA_FILE_NAME)
+            detail_state_text.text = it.getString(EXTRA_DOWNLOAD_STATUS)
+        }
+
+        detail_close_button.setOnClickListener {
+            finish()
+        }
     }
 
     private fun cancelNotification() {
