@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.coroutines.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     private var repoUrl: String? = null
     private var repoName: String? = null
+    private var repoText: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,20 +52,21 @@ class MainActivity : AppCompatActivity() {
                 R.id.radio_glide ->
                     if (checked) {
                         repoUrl = GLIDE
-                        repoName = "Glide"
+                        repoName = getString(R.string.repoNameGlide)
+                        repoText = getString(R.string.glide)
                     }
                 R.id.radio_loadApp ->
                     if (checked) {
                         repoUrl = UDACITY
-                        repoName = "Udacity"
+                        repoName = getString(R.string.repoNameUdacity)
+                        repoText = getString(R.string.loadApp)
                     }
                 R.id.radio_retrofit ->
                     if (checked) {
                         repoUrl = RETROFIT
-                        repoName = "Retrofit"
+                        repoName = getString(R.string.repoNameRetrofit)
+                        repoText = getString(R.string.retrofit)
                     }
-                else ->
-                    Toast.makeText(this@MainActivity, "ABC", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -73,21 +74,49 @@ class MainActivity : AppCompatActivity() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            if (downloadID == id) {
-                custom_button.setState(ButtonState.Completed)
 
-                notificationManager = ContextCompat.getSystemService(
-                    context!!,
-                    NotificationManager::class.java
-                ) as NotificationManager
+            notificationManager = ContextCompat.getSystemService(
+                context!!,
+                NotificationManager::class.java
+            ) as NotificationManager
 
-                createChannel(
-                    getString(R.string.notification_channel_id),
-                    getString(R.string.channel_name)
-                )
-                notificationManager.cancelNotifications()
-                notificationManager.sendNotification("Dowmloadd is read", context)
+            createChannel(
+                getString(R.string.notification_channel_id),
+                getString(R.string.channel_name)
+            )
 
+            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            var finishDownload = false
+            while (!finishDownload) {
+                val cursor =
+                    downloadManager.query(DownloadManager.Query().setFilterById(downloadID))
+                if (cursor.moveToFirst()) {
+                    val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                    when (status) {
+                        DownloadManager.STATUS_FAILED -> {
+                            custom_button.setState(ButtonState.Completed)
+                            notificationManager.cancelNotifications()
+                            notificationManager.sendNotification(
+                                getString(R.string.notification_info_not_ready),
+                                repoText.toString(),
+                                getString(R.string.statusFailed),
+                                context
+                            )
+                            finishDownload = true
+                        }
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            custom_button.setState(ButtonState.Completed)
+                            notificationManager.cancelNotifications()
+                            notificationManager.sendNotification(
+                                getString(R.string.notification_info),
+                                repoText.toString(),
+                                getString(R.string.statusSuccess),
+                                context
+                            )
+                            finishDownload = true
+                        }
+                    }
+                }
             }
         }
     }
@@ -99,7 +128,11 @@ class MainActivity : AppCompatActivity() {
         }
         else -> {
             custom_button.setState(ButtonState.Clicked)
-            Toast.makeText(this, "Nothing to do, choose a download", Toast.LENGTH_SHORT)
+            Toast.makeText(
+                this,
+                getString(R.string.download_no_option_toast),
+                Toast.LENGTH_SHORT
+            )
                 .show()
         }
     }
@@ -150,10 +183,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val URL =
-            "https://ftp.nluug.nl/pub/graphics/blender/release/Blender2.92/blender-2.92.0-macOS.dmg"
         private const val UDACITY =
-            "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
+            "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive"
         private const val GLIDE =
             "https://github.com/bumptech/glide/archive/master.zip"
         private const val RETROFIT =

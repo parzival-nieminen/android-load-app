@@ -33,5 +33,4 @@ class DetailActivity : AppCompatActivity() {
             ) as NotificationManager
         notificationManager.cancelNotifications()
     }
-
 }
