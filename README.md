@@ -14,3 +14,5 @@ Project for: Android Kotlin Developer Nanodegree Program - nd940 - project 3
 
 ![alt text](media/Screen-5.png "Load App Screen 5")
 
+![alt text](media/Screen-6.png "Load App Screen 5")
+
