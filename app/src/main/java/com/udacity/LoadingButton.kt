@@ -15,15 +15,19 @@ class LoadingButton @JvmOverloads constructor(
     private var widthSize = 0
     private var heightSize = 0
     private var valueAnimator = ValueAnimator()
+    private var isLoading = false
 
     private var colorBar = 0
     private var colorCircle = 0
+    private var colorBackground = 0
     private var progress = 0f
+    private val DURATION_TIME = 700L
 
     init {
         context.theme.obtainStyledAttributes(attrs, R.styleable.LoadingButton, 0, 0).apply {
             colorBar = getColor(R.styleable.LoadingButton_colorBar, 0)
             colorCircle = getColor(R.styleable.LoadingButton_colorCircle, 0)
+            colorBackground = getColor(R.styleable.LoadingButton_colorBackground, 0)
         }
     }
 
@@ -31,31 +35,34 @@ class LoadingButton @JvmOverloads constructor(
         when (new) {
             ButtonState.Clicked -> {
                 if (valueAnimator.isRunning) {
+                    isLoading = false
                     valueAnimator.cancel()
                 }
                 valueAnimator = ValueAnimator.ofFloat(0f, widthSize.toFloat()).apply {
                     setAnimatorListeners()
                     repeatCount = 1
                     repeatMode = ValueAnimator.REVERSE
-                    duration = 700
+                    duration = DURATION_TIME
                     start()
                 }
                 invalidate()
             }
             ButtonState.Completed -> {
+                isLoading = false
                 valueAnimator.cancel()
                 progress = 0f
                 invalidate()
             }
             ButtonState.Loading -> {
                 if (valueAnimator.isRunning) {
+                    isLoading = false
                     valueAnimator.cancel()
                 }
                 valueAnimator = ValueAnimator.ofFloat(0f, widthSize.toFloat()).apply {
                     setAnimatorListeners()
                     repeatCount = ValueAnimator.INFINITE
                     repeatMode = ValueAnimator.REVERSE
-                    duration = 700
+                    duration = DURATION_TIME
                     start()
                 }
                 invalidate()
@@ -70,6 +77,7 @@ class LoadingButton @JvmOverloads constructor(
         }
         addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator?) {
+                isLoading = true
                 isEnabled = false
             }
 
@@ -86,7 +94,7 @@ class LoadingButton @JvmOverloads constructor(
 
     private val paintButtonBackground = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.GREEN
+        color = colorBackground
     }
 
     private val paintProgress = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -141,11 +149,14 @@ class LoadingButton @JvmOverloads constructor(
         }
         // paint text
         var textBox = Rect()
-        val text = "Download"
-        buttonText.getTextBounds(text, 0, text.length, textBox)
+        var text = context.getText(R.string.load_button_text)
+        if (isLoading) {
+            text = context.getText(R.string.load_button_state_loading)
+        }
+        buttonText.getTextBounds(text.toString(), 0, text.length, textBox)
         canvas?.apply {
             drawText(
-                text,
+                text.toString(),
                 centerX - textBox.centerX(),
                 centerY - textBox.centerY(),
                 buttonText
@@ -169,5 +180,4 @@ class LoadingButton @JvmOverloads constructor(
     fun setState(newState: ButtonState) {
         buttonState = newState
     }
-
 }

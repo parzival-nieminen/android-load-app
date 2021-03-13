@@ -11,11 +11,13 @@ private const val NOTIFICATION_ID = 0
 const val EXTRA_DOWNLOAD_STATUS = "extra_download_status"
 const val EXTRA_FILE_NAME = "extra_download_file_name"
 
-fun NotificationManager.sendNotification(messageBody: String, applicationContext: Context) {
-
+fun NotificationManager.sendNotification(
+    messageBody: String, messageText: String, messageStatus: String,
+    applicationContext: Context
+) {
     val contentIntent = Intent(applicationContext, DetailActivity::class.java)
-    contentIntent.putExtra(EXTRA_FILE_NAME, "contentFileName")
-    contentIntent.putExtra(EXTRA_DOWNLOAD_STATUS, "SUCCES")
+    contentIntent.putExtra(EXTRA_FILE_NAME, messageText)
+    contentIntent.putExtra(EXTRA_DOWNLOAD_STATUS, messageStatus)
 
     val contentPendingIntent = PendingIntent.getActivity(
         applicationContext,
@@ -32,7 +34,7 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
 
     val downloadImage = BitmapFactory.decodeResource(
         applicationContext.resources,
-        R.drawable.download_app
+        R.drawable.banana
     )
 
     val bigPictureStyle = NotificationCompat.BigPictureStyle()
@@ -43,7 +45,6 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
         applicationContext,
         applicationContext.getString(R.string.notification_channel_id)
     )
-
         .setSmallIcon(R.drawable.ic_assistant_black_24dp)
         .setContentTitle(applicationContext.getString(R.string.notification_title))
         .setContentText(messageBody)
